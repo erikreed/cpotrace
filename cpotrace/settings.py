@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 ]
 
 CORS_ORIGIN_WHITELIST = (
-    'localhost:3004',
+    'localhost:3000',
 )
 
 MIDDLEWARE = [
