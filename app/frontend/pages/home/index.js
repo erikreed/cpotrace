@@ -13,8 +13,18 @@ import Layout from '../../components/Layout';
 import CarTable from '../../components/CarTable';
 import s from './styles.css';
 import { title, html } from './index.md';
+import axios from 'axios';
+
+
+const URL = 'http://localhost:8000/cars/';
 
 class HomePage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+        cars: []
+    };
+  }
 
   static propTypes = {
     articles: PropTypes.array.isRequired,
@@ -22,14 +32,25 @@ class HomePage extends React.Component {
 
   componentDidMount() {
     document.title = title;
+
+    axios.get(URL)
+      .then(res => {
+        this.setState({
+          cars: res.data
+        })
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
+
 
   render() {
     return (
       <Layout className={s.content}>
         <div dangerouslySetInnerHTML={{ __html: html }} />
         <h3>Pricing</h3>
-        <CarTable></CarTable>
+        <CarTable cars={this.state.cars}></CarTable>
       </Layout>
     );
   }
