@@ -22,14 +22,11 @@ class Layout extends React.Component {
 
   render() {
     return (
-      <div className="container" ref={node => (this.root = node)}>
-        <div className="mdl-layout__inner-container">
-          <Header />
-          <main className="mdl-layout__content">
-            <div {...this.props} className={cx(s.content, this.props.className)} />
-            <Footer />
-          </main>
-        </div>
+      <div>
+        <div {...this.props} className={cx(s.content, this.props.className)} />
+        <footer className="container-fluid">
+          <p>Tesla CPO Trace</p>
+        </footer>
       </div>
     );
   }
