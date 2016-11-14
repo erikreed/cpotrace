@@ -8,6 +8,7 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
+import { Set } from 'immutable';
 import capitalize from 'capitalize';
 import React, { PropTypes } from 'react';
 import Layout from '../../components/Layout';
@@ -36,9 +37,11 @@ class CarCountryFilterCounts extends React.Component {
   render() {
     let divs = [];
     for (let country of COUNTRIES) {
+      let onChange = this.props.onChange.bind(this.props.that, this.props.filtered, country);
       divs.push(<div key={country} className="input-group">
                   <label className="input-group-addon">
-                    <input onChange={this.props.onChange} checked={!this.props.filtered.has(country)} type="checkbox" />
+                    <input onChange={onChange}
+                        checked={!this.props.filtered.has(country)} type="checkbox" />
                     {country} ({this.props.cars.filter(c => c.country_code == country).length})
                   </label>
                 </div>)
@@ -53,21 +56,21 @@ class HomePage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      filteredModels: new Set(),
-      filteredCountries: new Set(),
+      filteredObjects: Set(),
       cars: []
     };
   }
 
   handleFilterChange(set, val, event) {
-    let filteredModels = new Set(set);
-    if (event.target.value) {
-      filteredModels.add(val);
+    console.log(set, val, event);
+    let filteredObjects;
+    if (set.has(val)) {
+      filteredObjects = set.delete(val);
     } else {
-      filteredModels.delete(val);
+      filteredObjects = set.add(val);
     }
     this.setState({
-      filteredModels: filteredModels
+      filteredObjects: filteredObjects
     });
   }
 
@@ -89,6 +92,12 @@ class HomePage extends React.Component {
       });
   }
 
+  filteredCars() {
+    let cars = this.state.cars;
+    return cars.filter(c => !(this.state.filteredObjects.has(c.country_code) ||
+        this.state.filteredObjects.has(c.model)));
+  }
+
 
   render() {
     return (
@@ -100,16 +109,17 @@ class HomePage extends React.Component {
               <h3>Tesla CPO Trace</h3>
               <div className="nav nav-pills nav-stacked">
                 Models:
-                <CarModelFilterCount filtered={this.state.filteredModels}
-                    onChange={this.handleFilterChange.bind(this, this.state.filteredModels, 'MODEL_S')}
+                <CarModelFilterCount filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_S')}
                     cars={this.state.cars} model='MODEL_S' />
-                <CarModelFilterCount filtered={this.state.filteredModels}
-                    onChange={this.handleFilterChange.bind(this, this.state.filteredModels, 'MODEL_X')}
+                <CarModelFilterCount filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_X')}
                     cars={this.state.cars} model='MODEL_X' />
 
                 Countries:
-                <CarCountryFilterCounts filtered={this.state.filteredCountries}
-                    onChange={this.handleFilterChange.bind(this)}
+                <CarCountryFilterCounts filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange}
+                    that={this}
                     cars={this.state.cars} />
               </div>
               <br />
@@ -117,7 +127,7 @@ class HomePage extends React.Component {
 
             <div className="col-sm-9">
               <h4>Details</h4>
-              <CarTable cars={this.state.cars}></CarTable>
+              <CarTable cars={this.filteredCars()}></CarTable>
             </div>
           </div>
         </div>

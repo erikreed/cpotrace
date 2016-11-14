@@ -67,8 +67,21 @@ export default class CarTable extends React.Component {
     super(props);
   }
 
-  options(key) {
-    let options = Array.from(new Set(this.props.cars.map(row => row[key])));
+  cars() {
+    let cars = [...this.props.cars];
+    let maxLength = Math.max(...cars.map(r => r.badge.length));
+    // hack to get around the select filter apparently doing only a string starts-with
+    const nullChar = '\u200B';
+    cars.forEach(r => {
+      for (let i = 0; i <= maxLength - r.badge.length; i++) {
+        r.badge = nullChar + r.badge + nullChar;
+      }
+    });
+    return cars
+  }
+
+  options(cars, key) {
+    let options = Array.from(new Set(cars.map(row => row[key])));
     options.sort();
     let ret = {};
     options.forEach(r => {
@@ -78,17 +91,18 @@ export default class CarTable extends React.Component {
   }
 
   render() {
+    const cars = this.cars();
     return (
-      <BootstrapTable data={ this.props.cars } pagination={ true } striped={ true } hover={ true }
-            options={{ paginationShowsTotal: true, sizePerPageList: [10, 50, 100] }}>
+      <BootstrapTable data={ cars } pagination={ true } striped={ true } hover={ true }
+            options={{ paginationShowsTotal: true, sizePerPageList: [15], sizePerPage: 15 }}>
         <TableHeaderColumn dataField='vin' isKey={ true } hidden={ true }>VIN</TableHeaderColumn>
-        <TableHeaderColumn dataField='model' dataFormat={ modelFormatter } formatExtraData={ modelTypes }
-          filter={ { type: 'SelectFilter', options: modelTypes } }>Model</TableHeaderColumn>
-        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options('badge') } }
+        <TableHeaderColumn dataField='model' dataFormat={ modelFormatter } formatExtraData={ modelTypes }>
+            Model</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'badge') } }
             dataField='badge'>Type</TableHeaderColumn>
         <TableHeaderColumn dataSort={true}
             dataField='paint' dataFormat={ paintFormatter }>Color</TableHeaderColumn>
-         <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options('is_autopilot') } }
+         <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'is_autopilot') } }
             dataField='is_autopilot'>Autopilot</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ priceFormatter } dataField='price'>Price</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ odometerFormatter } dataField='odometer'>Odometer</TableHeaderColumn>

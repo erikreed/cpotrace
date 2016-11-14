@@ -5,7 +5,6 @@ from django.utils import timezone
 
 def cars(request):
     cars = Car.objects.filter(
-        country_code='US',
         last_seen__gte=timezone.now() - timezone.timedelta(days=1),
     )
     return JsonResponse(list(cars.values(
