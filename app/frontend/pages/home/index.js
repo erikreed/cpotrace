@@ -10,12 +10,12 @@
 
 import { Set } from 'immutable';
 import capitalize from 'capitalize';
-import React, { PropTypes } from 'react';
+import React from 'react';
 import Layout from '../../components/Layout';
 import CarTable from '../../components/CarTable';
 import s from './styles.css';
-import title from './index.md';
 import axios from 'axios';
+import { ScatterPlot, BarChart } from 'react-d3-components';
 
 
 const URL = 'http://localhost:8000/cars/';
@@ -62,7 +62,6 @@ class HomePage extends React.Component {
   }
 
   handleFilterChange(set, val, event) {
-    console.log(set, val, event);
     let filteredObjects;
     if (set.has(val)) {
       filteredObjects = set.delete(val);
@@ -74,12 +73,8 @@ class HomePage extends React.Component {
     });
   }
 
-  static propTypes = {
-    articles: PropTypes.array.isRequired,
-  };
-
   componentDidMount() {
-    document.title = title;
+    document.title = 'Tesla CPO Trace';
 
     axios.get(URL)
       .then(res => {
@@ -98,8 +93,60 @@ class HomePage extends React.Component {
         this.state.filteredObjects.has(c.model)));
   }
 
+  odometerChartData(cars) {
+    let badges = Set(cars.map(c => c.badge));
+    let data = [];
+    badges.forEach(b => {
+      let badgeCars = cars.filter(c => c.badge == b);
+      data.push({
+        values: badgeCars.map(c => {
+          return {x: c.odometer, y: c.price};
+        }),
+        label: b
+      });
+    });
+    return data;
+  }
+
+  badgeChartData(cars) {
+    let badges = [...Set(cars.map(c => c.badge))];
+    badges.sort()
+    let models = [...Set(cars.map(c => c.model))];
+
+    let data = [];
+    models.forEach(m => {
+      let badgeCars = cars.filter(c => c.model == m);
+
+      data.push({
+        values: badges.map(b => {
+          let countForBadge = badgeCars.filter(c => c.badge == b).map(r => 1).reduce((a, b) => a + b, 0);
+          return {
+            x: b,
+            y: countForBadge
+          }
+        }),
+        label: m
+      });
+    });
+    console.log(data);
+    return data;
+  }
 
   render() {
+    let filteredCars = this.filteredCars();
+    if (this.state.cars.length == 0) {
+      var odometerPlot = null;
+      var badgePlot = null;
+    } else {
+      let tooltipHtml = (x, y) => {
+        return <div>Odometer {x}, price {y}</div>;
+      };
+      var odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 50, right: 10}}
+                            tooltipMode={'mouse'} opacity={1} tooltipHtml={tooltipHtml} xAxis={{label: "Odometer"}} yAxis={{label: "Price"}}/>;
+      var badgePlot = <BarChart groupedBars data={this.badgeChartData(filteredCars)} width={600} height={400}
+                                margin={{top: 10, bottom: 50, left: 50, right: 10}}/>;
+    }
+
     return (
       <Layout className={s.content}>
 
@@ -126,8 +173,18 @@ class HomePage extends React.Component {
             </div>
 
             <div className="col-sm-9">
+              <h4>Badge Breakdown</h4>
+              { badgePlot }
+            </div>
+
+            <div className="col-sm-9">
+              <h4>Odometer vs Price</h4>
+              { odometerPlot }
+            </div>
+
+            <div className="col-sm-9">
               <h4>Details</h4>
-              <CarTable cars={this.filteredCars()}></CarTable>
+              <CarTable cars={filteredCars}></CarTable>
             </div>
           </div>
         </div>
