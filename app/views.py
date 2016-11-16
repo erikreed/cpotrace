@@ -7,6 +7,9 @@ def cars(request):
     cars = Car.objects.filter(
         last_seen__gte=timezone.now() - timezone.timedelta(days=1),
     )
+    if not cars.exists():
+        cars = Car.objects.all()[:1000]
+
     return JsonResponse(list(cars.values(
         'first_seen', 'last_seen', 'price', 'is_autopilot',
         'badge', 'metro_id', 'country_code',

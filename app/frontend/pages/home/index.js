@@ -1,13 +1,3 @@
-/**
- * React Static Boilerplate
- * https://github.com/kriasoft/react-static-boilerplate
- *
- * Copyright © 2015-present Kriasoft, LLC. All rights reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE.txt file in the root directory of this source tree.
- */
-
 import { Set } from 'immutable';
 import capitalize from 'capitalize';
 import React from 'react';
@@ -17,15 +7,15 @@ import s from './styles.css';
 import axios from 'axios';
 import { ScatterPlot, BarChart } from 'react-d3-components';
 
-
-const URL = 'http://localhost:8000/cars/';
+const devMode = window.location.host.includes('localhost');
+const URL = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host) + '/cars/';
 const COUNTRIES = ['AT', 'BE', 'CA', 'DE', 'FI', 'FR', 'GB', 'IT', 'NL', 'US', 'CH'];
 
 class CarModelFilterCount extends React.Component {
   render() {
     let model = capitalize.words(this.props.model.replace('_', ' ').toLowerCase());
     return (<div className="input-group">
-              <label className="input-group-addon">
+              <label className={`input-group-addon ${s.alignNavRows}`}>
                 <input onChange={this.props.onChange} checked={!this.props.filtered.has(this.props.model)} type="checkbox" />
                 {model} ({this.props.cars.filter(c => c.model == this.props.model).length})
               </label>
@@ -39,7 +29,7 @@ class CarCountryFilterCounts extends React.Component {
     for (let country of COUNTRIES) {
       let onChange = this.props.onChange.bind(this.props.that, this.props.filtered, country);
       divs.push(<div key={country} className="input-group">
-                  <label className="input-group-addon">
+                  <label className={`input-group-addon ${s.alignNavRows}`}>
                     <input onChange={onChange}
                         checked={!this.props.filtered.has(country)} type="checkbox" />
                     {country} ({this.props.cars.filter(c => c.country_code == country).length})
@@ -128,8 +118,36 @@ class HomePage extends React.Component {
         label: m
       });
     });
-    console.log(data);
     return data;
+  }
+
+  allTimeSummaryDiv(cars) {
+    return (
+      <ul>
+        <li>X cars seen all-time</li>
+        <li>Captured X price changes over Y cars</li>
+        <li>Captured X odometer changes over Y cars</li>
+      </ul>);
+  }
+
+  recentSummaryDiv(cars) {
+    let lastUpdated = Math.max(...cars.map(c => new Date(c.last_seen)));
+    lastUpdated = new Date(lastUpdated).toLocaleString();
+
+    let newCars = cars.map(c => {
+      return (new Date() - new Date(c.first_seen)) / 1000 / 86400;
+    }).filter(c => c < 1).length;
+    let numCityLocations = Set(cars.map(c => c.metro_id)).size;
+    let numCountry = Set(cars.map(c => c.country_code)).size;
+
+    return (
+      <ul>
+        <li>Last updated: {lastUpdated}</li>
+        <li>{cars.length} cars active within last 24 hours</li>
+        <li>{newCars} new cars added within last 24 hours</li>
+        <li>Cars seen in {numCityLocations} city locations</li>
+        <li>Cars seen in {numCountry} countries</li>
+      </ul>)
   }
 
   render() {
@@ -152,10 +170,13 @@ class HomePage extends React.Component {
 
         <div className="container-fluid">
           <div className="row content">
-            <div className="col-sm-3 sidenav">
+            <div className="col-lg-12">
               <h3>Tesla CPO Trace</h3>
+              <hr />
+            </div>
+            <div className="col-sm-2 sidenav">
               <div className="nav nav-pills nav-stacked">
-                Models:
+                <b>Models:</b>
                 <CarModelFilterCount filtered={this.state.filteredObjects}
                     onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_S')}
                     cars={this.state.cars} model='MODEL_S' />
@@ -163,7 +184,7 @@ class HomePage extends React.Component {
                     onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_X')}
                     cars={this.state.cars} model='MODEL_X' />
 
-                Countries:
+                <b>Countries:</b>
                 <CarCountryFilterCounts filtered={this.state.filteredObjects}
                     onChange={this.handleFilterChange}
                     that={this}
@@ -172,17 +193,22 @@ class HomePage extends React.Component {
               <br />
             </div>
 
-            <div className="col-sm-9">
+            <div className="col-lg-6 col-sm-12">
+              <h4>Recent Activity Summary</h4>
+              { this.recentSummaryDiv(filteredCars) }
+            </div>
+
+            <div className="col-lg-5 col-sm-12">
               <h4>Badge Breakdown</h4>
               { badgePlot }
             </div>
 
-            <div className="col-sm-9">
+            <div className="col-lg-5 col-sm-12">
               <h4>Odometer vs Price</h4>
               { odometerPlot }
             </div>
 
-            <div className="col-sm-9">
+            <div className="col-lg-12 col-sm-12">
               <h4>Details</h4>
               <CarTable cars={filteredCars}></CarTable>
             </div>

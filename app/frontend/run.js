@@ -20,7 +20,7 @@ const config = {
   title: 'Tesla CPO Trace',        // Your website title
   url: 'https://cpotrace.com',          // Your website URL
   project: 'cpotrace',      // Firebase project. See README.md -> How to Deploy
-  trackingID: 'UA-XXXXX-Y',                 // Google Analytics Site's ID
+  trackingID: null // 'UA-XXXXX-Y',                 // Google Analytics Site's ID
 };
 
 const tasks = new Map(); // The collection of automation tasks ('clean', 'build', 'publish', etc.)
