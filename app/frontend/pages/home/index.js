@@ -8,7 +8,9 @@ import axios from 'axios';
 import { ScatterPlot, BarChart } from 'react-d3-components';
 
 const devMode = window.location.host.includes('localhost');
-const URL = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host) + '/cars/';
+const URL_BASE = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host);
+const CARS_URL = URL_BASE + '/cars/';
+const SUMMARY_URL = URL_BASE + '/cars/summary/';
 const COUNTRIES = ['AT', 'BE', 'CA', 'DE', 'FI', 'FR', 'GB', 'IT', 'NL', 'US', 'CH'];
 
 class CarModelFilterCount extends React.Component {
@@ -47,7 +49,8 @@ class HomePage extends React.Component {
     super(props);
     this.state = {
       filteredObjects: Set(),
-      cars: []
+      cars: [],
+      summary: {}
     };
   }
 
@@ -65,16 +68,23 @@ class HomePage extends React.Component {
 
   componentDidMount() {
     document.title = 'Tesla CPO Trace';
+    let err = (msg) => console.log(msg);
 
-    axios.get(URL)
+    axios.get(CARS_URL)
       .then(res => {
         this.setState({
           cars: res.data
         })
       })
-      .catch(err => {
-        console.log(err);
-      });
+      .catch(err);
+
+     axios.get(SUMMARY_URL)
+      .then(res => {
+        this.setState({
+          summary: res.data
+        })
+      })
+      .catch(err);
   }
 
   filteredCars() {
@@ -121,12 +131,12 @@ class HomePage extends React.Component {
     return data;
   }
 
-  allTimeSummaryDiv(cars) {
+  allTimeSummaryDiv() {
     return (
       <ul>
-        <li>X cars seen all-time</li>
-        <li>Captured X price changes over Y cars</li>
-        <li>Captured X odometer changes over Y cars</li>
+        <li>{ this.state.summary.totalCars } cars seen all-time</li>
+        <li>Captured { this.state.summary.priceChanges } price changes over { this.state.summary.priceChangeCars } cars</li>
+        <li>Captured { this.state.summary.odometerChanges } odometer changes over { this.state.summary.odometerChangeCars } cars</li>
       </ul>);
   }
 
@@ -159,7 +169,7 @@ class HomePage extends React.Component {
       let tooltipHtml = (x, y) => {
         return <div>Odometer {x}, price {y}</div>;
       };
-      var odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 50, right: 10}}
+      var odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
                             tooltipMode={'mouse'} opacity={1} tooltipHtml={tooltipHtml} xAxis={{label: "Odometer"}} yAxis={{label: "Price"}}/>;
       var badgePlot = <BarChart groupedBars data={this.badgeChartData(filteredCars)} width={600} height={400}
                                 margin={{top: 10, bottom: 50, left: 50, right: 10}}/>;
@@ -196,6 +206,10 @@ class HomePage extends React.Component {
             <div className="col-lg-6 col-sm-12">
               <h4>Recent Activity Summary</h4>
               { this.recentSummaryDiv(filteredCars) }
+            </div>
+            <div className="col-lg-6 col-sm-12">
+              <h4>All Time Statistics</h4>
+              { this.allTimeSummaryDiv() }
             </div>
 
             <div className="col-lg-5 col-sm-12">

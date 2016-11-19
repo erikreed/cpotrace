@@ -68,7 +68,8 @@ export default class CarTable extends React.Component {
   }
 
   cars() {
-    let cars = [...this.props.cars];
+    // Copy cars since re-assigning the badge later on mutates them
+    let cars = this.props.cars.map(r => Object.assign({}, r));
     let maxLength = Math.max(...cars.map(r => r.badge.length));
     // hack to get around the select filter apparently doing only a string starts-with
     const nullChar = '\u200B';
