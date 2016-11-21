@@ -6,6 +6,7 @@ import CarTable from '../../components/CarTable';
 import s from './styles.css';
 import axios from 'axios';
 import { ScatterPlot, BarChart } from 'react-d3-components';
+import { Button, ButtonToolbar } from 'react-bootstrap';
 
 const devMode = window.location.host.includes('localhost');
 const URL_BASE = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host);
@@ -140,6 +141,19 @@ class HomePage extends React.Component {
       </ul>);
   }
 
+  selectAll() {
+    this.setState({
+      filteredObjects: Set()
+    });
+  }
+
+  clearSelection() {
+    let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRIES]);
+    this.setState({
+      filteredObjects: filteredObjects
+    });
+  }
+
   recentSummaryDiv(cars) {
     let lastUpdated = Math.max(...cars.map(c => new Date(c.last_seen)));
     lastUpdated = new Date(lastUpdated).toLocaleString();
@@ -149,20 +163,50 @@ class HomePage extends React.Component {
     }).filter(c => c < 1).length;
     let numCityLocations = Set(cars.map(c => c.metro_id)).size;
     let numCountry = Set(cars.map(c => c.country_code)).size;
+    let numUsed = cars.filter(c => c.title_status == 'USED').length;
 
     return (
       <ul>
         <li>Last updated: {lastUpdated}</li>
-        <li>{cars.length} cars active within last 24 hours</li>
-        <li>{newCars} new cars added within last 24 hours</li>
+        <li>{cars.length} cars active within last 24 hours ({numUsed} used)</li>
+        <li>{newCars} cars added within last 24 hours</li>
         <li>Cars seen in {numCityLocations} city locations</li>
         <li>Cars seen in {numCountry} countries</li>
       </ul>)
   }
 
+  selectedCarDetails() {
+    let car = this.state.selectedCar;
+
+    if (car) {
+      let url = `https://www.tesla.com/${car.title_status == 'USED' ? 'preowned' : 'new'}/${car.vin}`;
+      return (
+        <div className="col-lg-12 col-sm-12">
+          <hr />
+          <h4>Selected Car Details</h4>
+          <ul>
+            <li>VIN: <a href={url}>{car.vin}</a></li>
+            <li>Model: {car.model}</li>
+            <li>Country Code: {car.country_code}</li>
+            <li>Status: {car.title_status}</li>
+            <li>First seen: {car.first_seen.toLocaleString()}</li>
+            <li>Last seen: {car.last_seen.toLocaleString()}</li>
+            <li>Paint: {car.paint}</li>
+            <li>Year: {car.year}</li>
+            <li>Autopilot: {car.is_autopilot}</li>
+            <li>Metro ID: {car.metro_id}</li>
+            <li>Price: {car.price}</li>
+            <li>Odometer: {car.odometer}</li>
+          </ul>
+        </div>
+      )
+    }
+    return null;
+  }
+
   render() {
     let filteredCars = this.filteredCars();
-    if (this.state.cars.length == 0) {
+    if (filteredCars.length == 0) {
       var odometerPlot = null;
       var badgePlot = null;
     } else {
@@ -199,6 +243,11 @@ class HomePage extends React.Component {
                     onChange={this.handleFilterChange}
                     that={this}
                     cars={this.state.cars} />
+                <br />
+                <ButtonToolbar>
+                  <Button onClick={this.clearSelection.bind(this)}>Clear</Button>
+                  <Button onClick={this.selectAll.bind(this)}>Select All</Button>
+                </ButtonToolbar>
               </div>
               <br />
             </div>
@@ -224,8 +273,10 @@ class HomePage extends React.Component {
 
             <div className="col-lg-12 col-sm-12">
               <h4>Details</h4>
-              <CarTable cars={filteredCars}></CarTable>
+              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})}></CarTable>
             </div>
+            { this.selectedCarDetails() }
+
           </div>
         </div>
       </Layout>

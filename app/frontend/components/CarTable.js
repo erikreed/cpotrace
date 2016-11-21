@@ -1,5 +1,6 @@
 /* eslint max-len: 0 */
 import React from 'react';
+import capitalize from 'capitalize';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
 const modelTypes = {
@@ -95,16 +96,19 @@ export default class CarTable extends React.Component {
     const cars = this.cars();
     return (
       <BootstrapTable data={ cars } pagination={ true } striped={ true } hover={ true }
-            options={{ paginationShowsTotal: true, sizePerPageList: [15], sizePerPage: 15 }}>
+            options={{ paginationShowsTotal: true, sizePerPageList: [15], sizePerPage: 15, onRowClick: this.props.carClick }}>
         <TableHeaderColumn dataField='vin' isKey={ true } hidden={ true }>VIN</TableHeaderColumn>
         <TableHeaderColumn dataField='model' dataFormat={ modelFormatter } formatExtraData={ modelTypes }>
             Model</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} dataField='country_code'>Country</TableHeaderColumn>
+        <TableHeaderColumn dataFormat={ t => capitalize(t.toLowerCase()) } dataSort={true} dataField='title_status'>Status</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'badge') } }
             dataField='badge'>Type</TableHeaderColumn>
         <TableHeaderColumn dataSort={true}
             dataField='paint' dataFormat={ paintFormatter }>Color</TableHeaderColumn>
          <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'is_autopilot') } }
             dataField='is_autopilot'>Autopilot</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} dataField='year'>Year</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ priceFormatter } dataField='price'>Price</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ odometerFormatter } dataField='odometer'>Odometer</TableHeaderColumn>
       </BootstrapTable>

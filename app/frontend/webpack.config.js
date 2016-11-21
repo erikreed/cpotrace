@@ -35,6 +35,7 @@ const config = {
     '!!style!css!bootstrap/dist/css/bootstrap.css',
     '!!style!css!react-bootstrap-table/dist/react-bootstrap-table.min.css',
     '!!style!css!./pages/home/styles.css',
+    '!!style!css!./styles.css',
     /* The main entry point of your JavaScript application */
     './main.js',
   ],
