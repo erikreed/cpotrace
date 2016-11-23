@@ -1,4 +1,19 @@
+import json
 from django.db import models
+
+
+def _get_options():
+    data = json.load(open('app/assets/pricebook-3.5_MS_US.json'))
+    options = data['tesla']['configSetPrices']['options']
+    for o in list(options.values()):
+        if o['value_list']:
+            for k, v in o['value_list'].items():
+                assert k not in options
+                options[k] = v
+    trimmed_options = {k: dict(name=v['name'], long_name=v['long_name']) for k, v in options.items()}
+    return trimmed_options
+
+options = _get_options()
 
 
 class Car(models.Model):
@@ -46,6 +61,24 @@ class Car(models.Model):
     is_first_registration_date = models.BooleanField()
     is_panoramic = models.BooleanField()
     is_premium = models.BooleanField()
+
+    @property
+    def paint_name(self):
+        for o in self.options.values():
+            if o['long_name'] and 'paint' in o['long_name'].lower():
+                return o['long_name']
+        return None
+
+    @property
+    def wheels_name(self):
+        for o in self.options.values():
+            if o['long_name'] and ('wheels' in o['long_name'].lower() or 'tire' in o['long_name'].lower()):
+                return o['long_name']
+        return None
+
+    @property
+    def options(self):
+        return {k: options[k] for k in self.option_code_list.split(',') if k in options}
 
 
 class CarPriceChange(models.Model):

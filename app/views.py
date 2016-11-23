@@ -10,11 +10,29 @@ def cars(request):
     if not cars.exists():
         cars = Car.objects.all()[:1000]
 
-    return JsonResponse(list(cars.values(
-        'first_seen', 'last_seen', 'price', 'is_autopilot',
-        'badge', 'metro_id', 'country_code',
-        'odometer', 'year', 'model', 'paint', 'title_status', 'vin'
-    )), safe=False)
+    out = []
+    for c in cars:
+        out.append(dict(
+            first_seen=c.first_seen,
+            last_seen=c.last_seen,
+            price=c.price,
+            is_autopilot=c.is_autopilot,
+            badge=c.badge,
+            metro_id=c.metro_id,
+            country_code=c.country_code,
+            odometer=c.odometer,
+            year=c.year,
+            model=c.model,
+            paint=c.paint,
+            title_status=c.title_status,
+            vin=c.vin,
+            is_premium=c.is_premium,
+            is_panoramic=c.is_panoramic,
+            wheels_name=c.wheels_name,
+            paint_name=c.paint_name
+        ))
+
+    return JsonResponse(out, safe=False)
 
 
 def summary(request):

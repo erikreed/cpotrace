@@ -1,6 +1,8 @@
 /* eslint max-len: 0 */
+import 'react-tooltip-component/lib/tooltip.css';
 import React from 'react';
 import capitalize from 'capitalize';
+import Tooltip from 'react-tooltip-component';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
 const modelTypes = {
@@ -48,14 +50,18 @@ function priceFormatter(cell, row) {
 
 function paintFormatter(cell, row) {
   let color = colorLookup[cell] ? colorLookup[cell] : colorLookup['PBCW'];
-  return <div style={{
-      width: '100%',
-      height: '1.2em',
-      border: '1px solid #d8d8d8',
-      backgroundColor: color,
-      opacity: .8
-
-  }}></div>
+  let paintName = row.paint_name || 'Unknown Paint';
+  return (
+    <Tooltip title={paintName} position={"top"}>
+      <div style={{
+          width: '100%',
+          height: '1.2em',
+          border: '1px solid #d8d8d8',
+          backgroundColor: color,
+          opacity: .8
+      }}></div>
+    </Tooltip>
+  )
 }
 
 function odometerFormatter(cell, row) {
@@ -102,12 +108,17 @@ export default class CarTable extends React.Component {
             Model</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataField='country_code'>Country</TableHeaderColumn>
         <TableHeaderColumn dataFormat={ t => capitalize(t.toLowerCase()) } dataSort={true} dataField='title_status'>Status</TableHeaderColumn>
-        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'badge') } }
+        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options(cars, 'badge') } }
             dataField='badge'>Type</TableHeaderColumn>
         <TableHeaderColumn dataSort={true}
             dataField='paint' dataFormat={ paintFormatter }>Color</TableHeaderColumn>
-         <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', delay: 1, options: this.options(cars, 'is_autopilot') } }
+        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options(cars, 'is_autopilot') } }
             dataField='is_autopilot'>Autopilot</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options(cars, 'is_premium') } }
+            dataField='is_premium'>Premium Interior</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options(cars, 'is_panoramic') } }
+            dataField='is_panoramic'>Pano Roof</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} dataField='wheels_name'>Wheels</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataField='year'>Year</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ priceFormatter } dataField='price'>Price</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} dataFormat={ odometerFormatter } dataField='odometer'>Odometer</TableHeaderColumn>

@@ -1,3 +1,15 @@
 .table-hover tr:hover {
   cursor: pointer;
 }
+
+.tooltip {
+  border: none !important;
+}
+
+.nav .input-group input[type="checkbox"] {
+  margin-right: 3px;
+}
+
+.nav .input-group label {
+  cursor: pointer;
+}

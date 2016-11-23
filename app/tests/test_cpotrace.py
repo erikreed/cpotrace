@@ -48,3 +48,12 @@ class TestParser(TestCase):
         assert models.CarPriceChange.objects.count() == 1
         assert models.CarOdometerChange.objects.get().odometer_new == 1973
         assert models.CarOdometerChange.objects.get().odometer_before == 973
+
+    def test_options(self):
+        crawler = TeslaCrawler(country_code='US')
+        cars = crawler.parse_response(self.data)
+        crawler.update_database(cars)
+
+        for c in models.Car.objects.all():
+            c.paint_name
+            c.wheels_name

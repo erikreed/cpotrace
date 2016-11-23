@@ -12,7 +12,36 @@ const devMode = window.location.host.includes('localhost');
 const URL_BASE = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host);
 const CARS_URL = URL_BASE + '/cars/';
 const SUMMARY_URL = URL_BASE + '/cars/summary/';
-const COUNTRIES = ['AT', 'BE', 'CA', 'DE', 'FI', 'FR', 'GB', 'IT', 'NL', 'US', 'CH'];
+
+const COUNTRIES = function() {
+  let data = `AT	Austria	de-AT,hr,hu,sl
+              BE	Belgium	nl-BE,fr-BE,de-BE
+              CA	Canada	en-CA,fr-CA,iu
+              CH	Switzerland	de-CH,fr-CH,it-CH,rm
+              DE	Germany	de
+              DK	Denmark	da-DK,en,fo,de-DK
+              FI	Finland	fi-FI,sv-FI,smn
+              FR	France	fr-FR,frp,br,co,ca,eu,oc
+              GB	United Kingdom	en-GB,cy-GB,gd
+              HK	Hong Kong	zh-HK,yue,zh,en
+              IT	Italy	it-IT,de-IT,fr-IT,sc,ca,co,sl
+              JP	Japan	ja
+              NL	Netherlands	nl-NL,fy-NL
+              NO	Norway	no,nb,nn,se,fi
+              SE	Sweden	sv-SE,se,sma,fi-SE
+              US	United States	en-US,es-US,haw,fr`;
+  let countries = data.split('\n').map(s => s.trim()).map(s => s.split('\t')).map(r => {
+    return {
+      code: r[0],
+      name: r[1],
+      languages: r[2].split(',')
+    };
+  });
+  return countries;
+}();
+const COUNTRY_CODES = COUNTRIES.map(c => c.code);
+console.log(COUNTRIES);
+
 
 class CarModelFilterCount extends React.Component {
   render() {
@@ -30,12 +59,12 @@ class CarCountryFilterCounts extends React.Component {
   render() {
     let divs = [];
     for (let country of COUNTRIES) {
-      let onChange = this.props.onChange.bind(this.props.that, this.props.filtered, country);
-      divs.push(<div key={country} className="input-group">
+      let onChange = this.props.onChange.bind(this.props.that, this.props.filtered, country.code);
+      divs.push(<div key={country.code} className="input-group">
                   <label className={`input-group-addon ${s.alignNavRows}`}>
                     <input onChange={onChange}
-                        checked={!this.props.filtered.has(country)} type="checkbox" />
-                    {country} ({this.props.cars.filter(c => c.country_code == country).length})
+                        checked={!this.props.filtered.has(country.code)} type="checkbox" />
+                    {country.name} ({this.props.cars.filter(c => c.country_code == country.code).length})
                   </label>
                 </div>)
     }
@@ -148,7 +177,7 @@ class HomePage extends React.Component {
   }
 
   clearSelection() {
-    let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRIES]);
+    let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRY_CODES]);
     this.setState({
       filteredObjects: filteredObjects
     });
@@ -228,7 +257,8 @@ class HomePage extends React.Component {
               <h3>Tesla CPO Trace</h3>
               <hr />
             </div>
-            <div className="col-sm-2 sidenav">
+
+            <div className="col-lg-2 col-sm-4 sidenav">
               <div className="nav nav-pills nav-stacked">
                 <b>Models:</b>
                 <CarModelFilterCount filtered={this.state.filteredObjects}
@@ -252,30 +282,34 @@ class HomePage extends React.Component {
               <br />
             </div>
 
-            <div className="col-lg-6 col-sm-12">
+            <div className="col-lg-6 col-sm-8">
               <h4>Recent Activity Summary</h4>
               { this.recentSummaryDiv(filteredCars) }
             </div>
-            <div className="col-lg-6 col-sm-12">
+            <div className="col-lg-6 col-sm-8">
               <h4>All Time Statistics</h4>
               { this.allTimeSummaryDiv() }
             </div>
 
-            <div className="col-lg-5 col-sm-12">
-              <h4>Badge Breakdown</h4>
-              { badgePlot }
-            </div>
-
-            <div className="col-lg-5 col-sm-12">
-              <h4>Odometer vs Price</h4>
-              { odometerPlot }
-            </div>
-
-            <div className="col-lg-12 col-sm-12">
+            <div className="col-lg-10 col-sm-12">
               <h4>Details</h4>
               <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})}></CarTable>
             </div>
             { this.selectedCarDetails() }
+
+          </div>
+          <div className="row content">
+
+            <div className="col-lg-6 col-sm-12 text-center">
+              <h4>Badge Breakdown</h4>
+              { badgePlot }
+            </div>
+
+            <div className="col-lg-6 col-sm-12 text-center">
+              <h4>Odometer vs Price</h4>
+              { odometerPlot }
+            </div>
+
 
           </div>
         </div>
