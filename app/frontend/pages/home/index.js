@@ -25,22 +25,20 @@ const COUNTRIES = function() {
               GB	United Kingdom	en-GB,cy-GB,gd
               HK	Hong Kong	zh-HK,yue,zh,en
               IT	Italy	it-IT,de-IT,fr-IT,sc,ca,co,sl
-              JP	Japan	ja
+              JP	Japan	jp
               NL	Netherlands	nl-NL,fy-NL
               NO	Norway	no,nb,nn,se,fi
               SE	Sweden	sv-SE,se,sma,fi-SE
               US	United States	en-US,es-US,haw,fr`;
-  let countries = data.split('\n').map(s => s.trim()).map(s => s.split('\t')).map(r => {
+  return data.split('\n').map(s => s.trim()).map(s => s.split('\t')).map(r => {
     return {
       code: r[0],
       name: r[1],
       languages: r[2].split(',')
     };
   });
-  return countries;
 }();
 const COUNTRY_CODES = COUNTRIES.map(c => c.code);
-console.log(COUNTRIES);
 
 
 class CarModelFilterCount extends React.Component {
@@ -140,7 +138,7 @@ class HomePage extends React.Component {
 
   badgeChartData(cars) {
     let badges = [...Set(cars.map(c => c.badge))];
-    badges.sort()
+    badges.sort();
     let models = [...Set(cars.map(c => c.model))];
 
     let data = [];
@@ -208,7 +206,13 @@ class HomePage extends React.Component {
     let car = this.state.selectedCar;
 
     if (car) {
-      let url = `https://www.tesla.com/${car.title_status == 'USED' ? 'preowned' : 'new'}/${car.vin}`;
+      let language = car.country_code == 'US' ? '' : COUNTRIES.filter(c => c.code == car.country_code)[0];
+      if (language) {
+        language = language.languages[0].replace('-', '_') + '/';
+      } else {
+        language = '';
+      }
+      let url = `https://www.tesla.com/${language}${car.title_status == 'USED' ? 'preowned' : 'new'}/${car.vin}`;
       return (
         <div className="col-lg-12 col-sm-12">
           <hr />
@@ -235,16 +239,15 @@ class HomePage extends React.Component {
 
   render() {
     let filteredCars = this.filteredCars();
-    if (filteredCars.length == 0) {
-      var odometerPlot = null;
-      var badgePlot = null;
-    } else {
+    let odometerPlot = null;
+    let badgePlot = null;
+    if (filteredCars.length > 0) {
       let tooltipHtml = (x, y) => {
         return <div>Odometer {x}, price {y}</div>;
       };
-      var odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
+      odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
                             tooltipMode={'mouse'} opacity={1} tooltipHtml={tooltipHtml} xAxis={{label: "Odometer"}} yAxis={{label: "Price"}}/>;
-      var badgePlot = <BarChart groupedBars data={this.badgeChartData(filteredCars)} width={600} height={400}
+      badgePlot = <BarChart groupedBars data={this.badgeChartData(filteredCars)} width={600} height={400}
                                 margin={{top: 10, bottom: 50, left: 50, right: 10}}/>;
     }
 
@@ -293,7 +296,7 @@ class HomePage extends React.Component {
 
             <div className="col-lg-10 col-sm-12">
               <h4>Details</h4>
-              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})}></CarTable>
+              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})} />
             </div>
             { this.selectedCarDetails() }
 

@@ -4,6 +4,7 @@ import logging
 import pandas as pd
 import time
 import json
+from django.db import transaction
 from app.models import Car, CarPriceChange, CarOdometerChange
 
 
@@ -76,6 +77,7 @@ class TeslaCrawler:
         logger.info('Fetched %d cars', len(response))
         return self.parse_response(response)
 
+    @transaction.atomic
     def update_database(self, cars_df):
         if len(cars_df) == 0:
             return
