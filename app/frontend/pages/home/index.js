@@ -313,6 +313,7 @@ class HomePage extends React.Component {
               <br />
             </div>
 
+
             <div className="col-lg-6 col-sm-8">
               <h4>Recent Activity Summary</h4>
               { this.recentSummaryDiv(filteredCars) }
@@ -322,25 +323,25 @@ class HomePage extends React.Component {
               { this.allTimeSummaryDiv() }
             </div>
 
-            <div className="col-lg-10 col-sm-12">
-              <h4>Details</h4>
-              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})} />
-            </div>
-            { this.selectedCarDetails() }
-
-          </div>
-          <div className="row content">
-
-            <div className="col-lg-6 col-sm-12 text-center">
+            <div className="col-lg-5 col-sm-12 text-center">
               <h4>Badge Breakdown</h4>
               { badgePlot }
             </div>
 
-            <div className="col-lg-6 col-sm-12 text-center">
+            <div className="col-lg-5 col-sm-12 text-center">
               <h4>Odometer vs Price</h4>
               { odometerPlot }
             </div>
 
+
+          </div>
+          <div className="row content">
+
+            <div className="col-lg-12 col-sm-12">
+              <h4>Details</h4>
+              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})} />
+            </div>
+            { this.selectedCarDetails() }
 
           </div>
         </div>
