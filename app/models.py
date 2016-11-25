@@ -19,7 +19,7 @@ options = _get_options()
 class Car(models.Model):
     vin = models.CharField(max_length=32, unique=True)
     first_seen = models.DateTimeField(auto_now_add=True)
-    last_seen = models.DateTimeField(auto_now=True)
+    last_seen = models.DateTimeField(auto_now=True, db_index=True)
 
     price = models.PositiveIntegerField()
 
@@ -73,7 +73,7 @@ class Car(models.Model):
     def wheels_name(self):
         for o in self.options.values():
             if o['long_name'] and ('wheels' in o['long_name'].lower() or 'tire' in o['long_name'].lower()):
-                return o['long_name']
+                return o['long_name'].replace('No ', '')
         return None
 
     @property

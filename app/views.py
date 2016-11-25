@@ -1,14 +1,14 @@
 from app.models import Car, CarOdometerChange, CarPriceChange
 from django.http import JsonResponse
+from django.db.models import Max
 from django.utils import timezone
 
 
 def cars(request):
+    last_check_time = Car.objects.all().aggregate(max=Max('last_seen'))['max']
     cars = Car.objects.filter(
-        last_seen__gte=timezone.now() - timezone.timedelta(days=1),
+        last_seen__gte=last_check_time - timezone.timedelta(days=1),
     )
-    if not cars.exists():
-        cars = Car.objects.all()[:1000]
 
     out = []
     for c in cars:

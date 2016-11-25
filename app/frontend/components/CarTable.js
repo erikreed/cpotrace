@@ -10,6 +10,52 @@ const modelTypes = {
   MODEL_X: 'Model X'
 };
 
+const METRO_LOOKUP = function(){
+    let metros = {
+        "Atlanta": {"MetroId": 9, "MetroName": "Atlanta", "StateProvince": "Georgia", "IsDefault": false},
+        "Chicago": {"MetroId": 7, "MetroName": "Chicago", "StateProvince": "Illinois", "IsDefault": false},
+        "Florida": {"MetroId": 10, "MetroName": "Florida", "StateProvince": "Florida", "IsDefault": false},
+        "Los Angeles": {"MetroId": 4, "MetroName": "Los Angeles", "StateProvince": "California", "IsDefault": false},
+        "Missouri": {"MetroId": 57, "MetroName": "Missouri", "StateProvince": "", "IsDefault": false},
+        "New England": {"MetroId": 56, "MetroName": "New England", "StateProvince": "", "IsDefault": false},
+        "New York": {"MetroId": 11, "MetroName": "New York", "StateProvince": "New York", "IsDefault": false},
+        "Ohio": {"MetroId": 8, "MetroName": "Ohio", "StateProvince": "Ohio", "IsDefault": false},
+        "Orange County\/San Diego": {
+        "MetroId": 16,
+            "MetroName": "Orange County\/San Diego",
+            "StateProvince": "California",
+            "IsDefault": false
+    },
+        "Pennsylvania": {"MetroId": 15, "MetroName": "Pennsylvania", "StateProvince": "Pennsylvania", "IsDefault": false},
+        "Rocky Mountain Region": {
+        "MetroId": 6,
+            "MetroName": "Rocky Mountain Region",
+            "StateProvince": "Colorado",
+            "IsDefault": false
+    },
+        "San Francisco Bay Area": {
+        "MetroId": 3,
+            "MetroName": "San Francisco Bay Area",
+            "StateProvince": "California",
+            "IsDefault": true
+    },
+        "Seattle": {"MetroId": 2, "MetroName": "Seattle", "StateProvince": "Washington", "IsDefault": false},
+        "Washington DC": {
+        "MetroId": 1,
+            "MetroName": "Washington DC",
+            "StateProvince": "District of Columbia",
+            "IsDefault": false
+    },
+        "0": {"MetroId": 0, "MetroName": "Any Location"}
+    };
+    let out = {};
+    for (let m in metros) {
+        console.log(metros[m]);
+        out[metros[m].MetroId] = metros[m].MetroName;
+    }
+    return out;
+}();
+
 const colorLookup = {
   PBCW: 'rgb(255, 255, 255)',
   PBSB: 'rgb(41, 32, 35)',
@@ -38,6 +84,13 @@ const odometerUnitLookup = {
     FR: 'km'
 };
 
+function locationFormatter(cell, row) {
+    let location = METRO_LOOKUP[row.metro_id];
+    if (location) {
+        return location + ', ' + row.country_code;
+    }
+    return row.country_code;
+}
 
 function modelFormatter(cell, row, enumObject) {
   return enumObject[cell];
@@ -106,8 +159,9 @@ export default class CarTable extends React.Component {
         <TableHeaderColumn dataField='vin' isKey={ true } hidden={ true }>VIN</TableHeaderColumn>
         <TableHeaderColumn dataField='model' dataFormat={ modelFormatter } formatExtraData={ modelTypes }>
             Model</TableHeaderColumn>
-        <TableHeaderColumn dataSort={true} dataField='country_code'>Country</TableHeaderColumn>
-        <TableHeaderColumn dataFormat={ t => capitalize(t.toLowerCase()) } dataSort={true} dataField='title_status'>Status</TableHeaderColumn>
+        <TableHeaderColumn dataSort={true} dataFormat={ locationFormatter } dataField='metro_id'>Location</TableHeaderColumn>
+        <TableHeaderColumn dataFormat={ t => capitalize(t.toLowerCase()) } dataSort={true} dataField='title_status'
+            filter={ { type: 'SelectFilter', options: this.options(cars, 'title_status') } }>Status</TableHeaderColumn>
         <TableHeaderColumn dataSort={true} filter={ { type: 'SelectFilter', options: this.options(cars, 'badge') } }
             dataField='badge'>Type</TableHeaderColumn>
         <TableHeaderColumn dataSort={true}

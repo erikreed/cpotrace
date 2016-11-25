@@ -53,6 +53,27 @@ class CarModelFilterCount extends React.Component {
   }
 }
 
+class LoadingModal extends React.Component {
+  render() {
+    if (this.props.show) {
+      return (
+          <div className="sk-cube-grid loadingModal">
+            <div className="sk-cube sk-cube1"></div>
+            <div className="sk-cube sk-cube2"></div>
+            <div className="sk-cube sk-cube3"></div>
+            <div className="sk-cube sk-cube4"></div>
+            <div className="sk-cube sk-cube5"></div>
+            <div className="sk-cube sk-cube6"></div>
+            <div className="sk-cube sk-cube7"></div>
+            <div className="sk-cube sk-cube8"></div>
+            <div className="sk-cube sk-cube9"></div>
+            <h3>Loading...</h3>
+          </div>);
+    }
+    return null;
+  }
+}
+
 class CarCountryFilterCounts extends React.Component {
   render() {
     let divs = [];
@@ -75,11 +96,13 @@ class CarCountryFilterCounts extends React.Component {
 class HomePage extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       filteredObjects: Set(),
       cars: [],
       summary: {}
     };
+  this.state.filteredObjects = this.clearSelection(false).subtract(['MODEL_S', 'US']);
   }
 
   handleFilterChange(set, val, event) {
@@ -174,11 +197,14 @@ class HomePage extends React.Component {
     });
   }
 
-  clearSelection() {
+  clearSelection(save=true) {
     let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRY_CODES]);
-    this.setState({
-      filteredObjects: filteredObjects
-    });
+    if (save) {
+      this.setState({
+        filteredObjects: filteredObjects
+      });
+    }
+    return filteredObjects;
   }
 
   recentSummaryDiv(cars) {
@@ -253,6 +279,8 @@ class HomePage extends React.Component {
 
     return (
       <Layout className={s.content}>
+
+        <LoadingModal show={this.state.cars.length == 0} />
 
         <div className="container-fluid">
           <div className="row content">
