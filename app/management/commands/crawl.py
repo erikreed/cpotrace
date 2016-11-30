@@ -28,3 +28,6 @@ class Command(BaseCommand):
                         print('Error crawling:', e)
                     print('Sleeping 1 second [%d cars in database]' % Car.objects.count())
                     time.sleep(1)
+        print('Done!')
+        print('Saw %d P85s w/ autopilot' % Car.objects.filter(badge__in=['P85', 'P85+'], is_autopilot=True).count())
+
