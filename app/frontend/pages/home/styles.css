@@ -20,3 +20,11 @@
   text-align: left;
   padding-left: 33%;
 }
+
+.modalOverlay {
+    position: absolute;
+    width: 10000%;
+    height: 10000%;
+    background: rgba(255, 255, 255, 0.56);
+    z-index: 1;
+}

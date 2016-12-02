@@ -57,17 +57,19 @@ class LoadingModal extends React.Component {
   render() {
     if (this.props.show) {
       return (
-          <div className="sk-cube-grid loadingModal">
-            <div className="sk-cube sk-cube1"></div>
-            <div className="sk-cube sk-cube2"></div>
-            <div className="sk-cube sk-cube3"></div>
-            <div className="sk-cube sk-cube4"></div>
-            <div className="sk-cube sk-cube5"></div>
-            <div className="sk-cube sk-cube6"></div>
-            <div className="sk-cube sk-cube7"></div>
-            <div className="sk-cube sk-cube8"></div>
-            <div className="sk-cube sk-cube9"></div>
-            <h3>Loading...</h3>
+          <div className={s.modalOverlay}>
+            <div className="sk-cube-grid loadingModal">
+              <div className="sk-cube sk-cube1"></div>
+              <div className="sk-cube sk-cube2"></div>
+              <div className="sk-cube sk-cube3"></div>
+              <div className="sk-cube sk-cube4"></div>
+              <div className="sk-cube sk-cube5"></div>
+              <div className="sk-cube sk-cube6"></div>
+              <div className="sk-cube sk-cube7"></div>
+              <div className="sk-cube sk-cube8"></div>
+              <div className="sk-cube sk-cube9"></div>
+              <h3>Loading...</h3>
+            </div>
           </div>);
     }
     return null;
