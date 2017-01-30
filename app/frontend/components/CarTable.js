@@ -50,7 +50,6 @@ const METRO_LOOKUP = function(){
     };
     let out = {};
     for (let m in metros) {
-        console.log(metros[m]);
         out[metros[m].MetroId] = metros[m].MetroName;
     }
     return out;

@@ -12,6 +12,8 @@ const devMode = window.location.host.includes('localhost');
 const URL_BASE = window.location.protocol + '//' + (devMode ? 'localhost:8000' : window.location.host);
 const CARS_URL = URL_BASE + '/cars/';
 const SUMMARY_URL = URL_BASE + '/cars/summary/';
+const HISTORY_URL = URL_BASE + '/cars/history/';
+const carHistoryCache = {};
 
 const COUNTRIES = function() {
   let data = `AT	Austria	de-AT,hr,hu,sl
@@ -338,10 +340,75 @@ class SummaryView extends React.PureComponent {
 
 }
 
-class SelectedCarView extends React.PureComponent {
+class SelectedCarView extends React.Component {
 
-  selectedCarDetails() {
-    let car = this.props.car;
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  componentDidMount() {
+    this.updateCar();
+  }
+
+  updateCar() {
+    if (!this.props.car) {
+      return;
+    }
+
+    const vin = this.props.car.vin;
+    if (carHistoryCache[vin]) {
+      this.setState({
+        history: carHistoryCache[vin]
+      });
+      return;
+    }
+    let err = (msg) => console.log(msg);
+
+     axios.get(`${HISTORY_URL}?vin=${vin}`)
+      .then(res => {
+        carHistoryCache[vin] = res.data;
+        this.setState({
+          history: res.data
+        })
+      })
+      .catch(err);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.updateCar();
+  }
+
+  render() {
+    const car = this.props.car;
+    if (this.state.history) {
+      const odometerData = this.state.history.odometer_changes.map(r => {
+        return {y: r.odometer_new, x: new Date(r.timestamp)};
+      });
+      const priceData = this.state.history.price_changes.map(r => {
+        return {y: r.price_new, x: new Date(r.timestamp)};
+      });
+      const odometerPlotData = [{
+        values: odometerData,
+        label: 'Odometer'
+      }];
+      const pricePlotData = [{
+        values: priceData,
+        label: 'Price'
+      }];
+
+      const tooltipHtml = (x, y) => {
+        return <div>{y}</div>;
+      };
+
+      var odometerPlot = odometerData.length > 1 ? <ScatterPlot data={odometerPlotData} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
+                            opacity={1} tooltipMode={'mouse'} tooltipHtml={tooltipHtml} xAxis={{label: "Time"}} yAxis={{label: "Odometer"}}/> : <p>No data</p>;
+      var pricePlot = priceData.length > 1 ? <ScatterPlot data={pricePlotData} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
+                            opacity={1} tooltipMode={'mouse'} tooltipHtml={tooltipHtml} xAxis={{label: "Time"}} yAxis={{label: "Price"}}/> : <p>No data</p>;
+    } else {
+      var odometerPlot = <p>No data</p>;
+      var pricePlot = <p>No data</p>;
+    }
 
     if (car) {
       let language = car.country_code == 'US' ? '' : COUNTRIES.filter(c => c.code == car.country_code)[0];
@@ -352,31 +419,39 @@ class SelectedCarView extends React.PureComponent {
       }
       let url = `https://www.tesla.com/${language}${car.title_status == 'USED' ? 'preowned' : 'new'}/${car.vin}`;
       return (
-        <div className="col-lg-12 col-sm-12">
-          <hr />
-          <h4>Selected Car Details</h4>
-          <ul>
-            <li>VIN: <a href={url}>{car.vin}</a></li>
-            <li>Model: {car.model}</li>
-            <li>Country Code: {car.country_code}</li>
-            <li>Status: {car.title_status}</li>
-            <li>First seen: {car.first_seen.toLocaleString()}</li>
-            <li>Last seen: {car.last_seen.toLocaleString()}</li>
-            <li>Paint: {car.paint}</li>
-            <li>Year: {car.year}</li>
-            <li>Autopilot: {car.is_autopilot}</li>
-            <li>Metro ID: {car.metro_id}</li>
-            <li>Price: {car.price}</li>
-            <li>Odometer: {car.odometer}</li>
-          </ul>
+        <div>
+
+          <div className="col-lg-5 col-sm-12 text-center">
+            <h4>Odometer History</h4>
+            { odometerPlot }
+          </div>
+          <div className="col-lg-5 col-sm-12 text-center">
+            <h4>Price History</h4>
+            { pricePlot }
+          </div>
+
+          <div className="col-lg-6 col-sm-8">
+            <hr />
+            <h4>Selected Car Details</h4>
+            <ul>
+              <li>VIN: <a href={url}>{car.vin}</a></li>
+              <li>Model: {car.model}</li>
+              <li>Country Code: {car.country_code}</li>
+              <li>Status: {car.title_status}</li>
+              <li>First seen: {car.first_seen.toLocaleString()}</li>
+              <li>Last seen: {car.last_seen.toLocaleString()}</li>
+              <li>Paint: {car.paint}</li>
+              <li>Year: {car.year}</li>
+              <li>Autopilot: {car.is_autopilot}</li>
+              <li>Metro ID: {car.metro_id}</li>
+              <li>Price: {car.price}</li>
+              <li>Odometer: {car.odometer}</li>
+            </ul>
+          </div>
         </div>
       )
     }
     return null;
-  }
-
-  render() {
-    return this.selectedCarDetails();
   }
 }
 

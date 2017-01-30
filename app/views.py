@@ -45,18 +45,16 @@ def history(request):
     price_changes = (CarPriceChange.objects
                      .filter(car=car)
                      .order_by('-timestamp')
-                     .limit(100)
-                     .values('timestamp', 'price_new'))
+                     .values('timestamp', 'price_new')[:100])
 
     odometer_changes = (CarOdometerChange.objects
                         .filter(car=car)
                         .order_by('-timestamp')
-                        .limit(100)
-                        .values('timestamp', 'odometer_new'))
+                        .values('timestamp', 'odometer_new')[:100])
 
     return JsonResponse(dict(
-        price_changes=price_changes,
-        odometer_changes=odometer_changes,
+        price_changes=list(price_changes),
+        odometer_changes=list(odometer_changes),
     ), safe=False)
 
 
