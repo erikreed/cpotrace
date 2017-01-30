@@ -85,11 +85,11 @@ class CarPriceChange(models.Model):
     car = models.ForeignKey(Car)
     price_before = models.PositiveIntegerField()
     price_new = models.PositiveIntegerField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class CarOdometerChange(models.Model):
     car = models.ForeignKey(Car)
     odometer_before = models.PositiveIntegerField()
     odometer_new = models.PositiveIntegerField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)

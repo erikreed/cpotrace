@@ -41,7 +41,7 @@ const COUNTRIES = function() {
 const COUNTRY_CODES = COUNTRIES.map(c => c.code);
 
 
-class CarModelFilterCount extends React.Component {
+class CarModelFilterCount extends React.PureComponent {
   render() {
     let model = capitalize.words(this.props.model.replace('_', ' ').toLowerCase());
     return (<div className="input-group">
@@ -76,7 +76,7 @@ class LoadingModal extends React.Component {
   }
 }
 
-class CarCountryFilterCounts extends React.Component {
+class CarCountryFilterCounts extends React.PureComponent {
   render() {
     let divs = [];
     for (let country of COUNTRIES) {
@@ -93,9 +93,7 @@ class CarCountryFilterCounts extends React.Component {
   }
 }
 
-
-
-class HomePage extends React.Component {
+class HomePage extends React.PureComponent {
   constructor(props) {
     super(props);
 
@@ -146,6 +144,87 @@ class HomePage extends React.Component {
         this.state.filteredObjects.has(c.model)));
   }
 
+  selectAll() {
+    this.setState({
+      filteredObjects: Set()
+    });
+  }
+
+  clearSelection(save=true) {
+    let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRY_CODES]);
+    if (save) {
+      this.setState({
+        filteredObjects: filteredObjects
+      });
+    }
+    return filteredObjects;
+  }
+
+  render() {
+    const filteredCars = this.filteredCars();
+    const view = !this.state.selectedCar ? (<SummaryView cars={filteredCars} summary={this.state.summary} />) : (<SelectedCarView car={this.state.selectedCar} />);
+
+    return (
+      <Layout className={s.content}>
+
+        <LoadingModal show={this.state.cars.length == 0} />
+
+        <div className="container-fluid">
+          <div className="row content">
+            <div className="col-lg-12">
+              <h3>Tesla CPO Trace</h3>
+              <hr />
+            </div>
+
+            <div className="col-lg-2 col-sm-4 sidenav">
+              <div className="nav nav-pills nav-stacked">
+                <b>Models:</b>
+                <CarModelFilterCount filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_S')}
+                    cars={this.state.cars} model='MODEL_S' />
+                <CarModelFilterCount filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_X')}
+                    cars={this.state.cars} model='MODEL_X' />
+
+                <b>Countries:</b>
+                <CarCountryFilterCounts filtered={this.state.filteredObjects}
+                    onChange={this.handleFilterChange}
+                    that={this}
+                    cars={this.state.cars} />
+                <br />
+                <ButtonToolbar>
+                  <Button onClick={this.clearSelection.bind(this)}>Clear</Button>
+                  <Button onClick={this.selectAll.bind(this)}>Select All</Button>
+                </ButtonToolbar>
+              </div>
+              <br />
+            </div>
+
+            { view }
+
+          </div>
+
+          <div className="row content">
+
+            <div className="col-lg-12 col-sm-12">
+              <h4>Details</h4>
+              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})} />
+            </div>
+          </div>
+
+        </div>
+      </Layout>
+    );
+  }
+
+}
+
+class SummaryView extends React.PureComponent {
+
+  constructor(props) {
+    super(props);
+  }
+
   odometerChartData(cars) {
     let badges = Set(cars.map(c => c.badge));
     let data = [];
@@ -187,26 +266,53 @@ class HomePage extends React.Component {
   allTimeSummaryDiv() {
     return (
       <ul>
-        <li>{ this.state.summary.totalCars } cars seen all-time</li>
-        <li>Captured { this.state.summary.priceChanges } price changes over { this.state.summary.priceChangeCars } cars</li>
-        <li>Captured { this.state.summary.odometerChanges } odometer changes over { this.state.summary.odometerChangeCars } cars</li>
+        <li>{ this.props.summary.totalCars } cars seen all-time</li>
+        <li>Captured { this.props.summary.priceChanges } price changes over { this.props.summary.priceChangeCars } cars</li>
+        <li>Captured { this.props.summary.odometerChanges } odometer changes over { this.props.summary.odometerChangeCars } cars</li>
       </ul>);
   }
 
-  selectAll() {
-    this.setState({
-      filteredObjects: Set()
-    });
-  }
-
-  clearSelection(save=true) {
-    let filteredObjects = this.state.filteredObjects.union(['MODEL_X', 'MODEL_S', ...COUNTRY_CODES]);
-    if (save) {
-      this.setState({
-        filteredObjects: filteredObjects
+  render() {
+    let odometerPlot = null;
+    let badgePlot = null;
+    if (this.props.cars.length > 0) {
+      const odometerPriceToCar = {};
+      this.props.cars.map(c => {
+        odometerPriceToCar[[c.price, c.odometer].toString()] = c;
       });
+      const tooltipHtml = (x, y) => {
+        const c = odometerPriceToCar[[y, x].toString()];
+        return <div>{c.badge}: Odometer {x}, price {y}</div>;
+      };
+      odometerPlot = <ScatterPlot data={this.odometerChartData(this.props.cars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
+                            tooltipMode={'mouse'} opacity={1} tooltipHtml={tooltipHtml} xAxis={{label: "Odometer"}} yAxis={{label: "Price"}}/>;
+      badgePlot = <BarChart groupedBars data={this.badgeChartData(this.props.cars)} width={600} height={400}
+                                margin={{top: 10, bottom: 50, left: 50, right: 10}}/>;
     }
-    return filteredObjects;
+
+    return (
+      <div>
+        <div className="col-lg-6 col-sm-8">
+          <h4>Recent Activity Summary</h4>
+          { this.recentSummaryDiv(this.props.cars) }
+        </div>
+        <div className="col-lg-6 col-sm-8">
+          <h4>All Time Statistics</h4>
+          { this.allTimeSummaryDiv() }
+        </div>
+
+        <div className="col-lg-5 col-sm-12 text-center">
+          <h4>Badge Breakdown</h4>
+          { badgePlot }
+        </div>
+
+        <div className="col-lg-5 col-sm-12 text-center">
+          <h4>Odometer vs Price</h4>
+          { odometerPlot }
+        </div>
+
+      </div>
+    );
   }
 
   recentSummaryDiv(cars) {
@@ -230,8 +336,12 @@ class HomePage extends React.Component {
       </ul>)
   }
 
+}
+
+class SelectedCarView extends React.PureComponent {
+
   selectedCarDetails() {
-    let car = this.state.selectedCar;
+    let car = this.props.car;
 
     if (car) {
       let language = car.country_code == 'US' ? '' : COUNTRIES.filter(c => c.code == car.country_code)[0];
@@ -266,91 +376,8 @@ class HomePage extends React.Component {
   }
 
   render() {
-    let filteredCars = this.filteredCars();
-    let odometerPlot = null;
-    let badgePlot = null;
-    if (filteredCars.length > 0) {
-      let tooltipHtml = (x, y) => {
-        return <div>Odometer {x}, price {y}</div>;
-      };
-      odometerPlot = <ScatterPlot data={this.odometerChartData(filteredCars)} width={600} height={400} margin={{top: 10, bottom: 50, left: 75, right: 10}}
-                            tooltipMode={'mouse'} opacity={1} tooltipHtml={tooltipHtml} xAxis={{label: "Odometer"}} yAxis={{label: "Price"}}/>;
-      badgePlot = <BarChart groupedBars data={this.badgeChartData(filteredCars)} width={600} height={400}
-                                margin={{top: 10, bottom: 50, left: 50, right: 10}}/>;
-    }
-
-    return (
-      <Layout className={s.content}>
-
-        <LoadingModal show={this.state.cars.length == 0} />
-
-        <div className="container-fluid">
-          <div className="row content">
-            <div className="col-lg-12">
-              <h3>Tesla CPO Trace</h3>
-              <hr />
-            </div>
-
-            <div className="col-lg-2 col-sm-4 sidenav">
-              <div className="nav nav-pills nav-stacked">
-                <b>Models:</b>
-                <CarModelFilterCount filtered={this.state.filteredObjects}
-                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_S')}
-                    cars={this.state.cars} model='MODEL_S' />
-                <CarModelFilterCount filtered={this.state.filteredObjects}
-                    onChange={this.handleFilterChange.bind(this, this.state.filteredObjects, 'MODEL_X')}
-                    cars={this.state.cars} model='MODEL_X' />
-
-                <b>Countries:</b>
-                <CarCountryFilterCounts filtered={this.state.filteredObjects}
-                    onChange={this.handleFilterChange}
-                    that={this}
-                    cars={this.state.cars} />
-                <br />
-                <ButtonToolbar>
-                  <Button onClick={this.clearSelection.bind(this)}>Clear</Button>
-                  <Button onClick={this.selectAll.bind(this)}>Select All</Button>
-                </ButtonToolbar>
-              </div>
-              <br />
-            </div>
-
-
-            <div className="col-lg-6 col-sm-8">
-              <h4>Recent Activity Summary</h4>
-              { this.recentSummaryDiv(filteredCars) }
-            </div>
-            <div className="col-lg-6 col-sm-8">
-              <h4>All Time Statistics</h4>
-              { this.allTimeSummaryDiv() }
-            </div>
-
-            <div className="col-lg-5 col-sm-12 text-center">
-              <h4>Badge Breakdown</h4>
-              { badgePlot }
-            </div>
-
-            <div className="col-lg-5 col-sm-12 text-center">
-              <h4>Odometer vs Price</h4>
-              { odometerPlot }
-            </div>
-
-
-          </div>
-          <div className="row content">
-
-            <div className="col-lg-12 col-sm-12">
-              <h4>Details</h4>
-              <CarTable cars={filteredCars} carClick={r => this.setState({selectedCar: r})} />
-            </div>
-            { this.selectedCarDetails() }
-
-          </div>
-        </div>
-      </Layout>
-    );
+    return this.selectedCarDetails();
   }
-
 }
 
 export default HomePage;

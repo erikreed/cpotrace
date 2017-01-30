@@ -35,6 +35,31 @@ def cars(request):
     return JsonResponse(out, safe=False)
 
 
+def history(request):
+    last_check_time = Car.objects.all().aggregate(max=Max('last_seen'))['max']
+    car = Car.objects.get(
+        vin=request.GET['vin'],
+        last_seen__gte=last_check_time - timezone.timedelta(days=1)
+    )
+
+    price_changes = (CarPriceChange.objects
+                     .filter(car=car)
+                     .order_by('-timestamp')
+                     .limit(100)
+                     .values('timestamp', 'price_new'))
+
+    odometer_changes = (CarOdometerChange.objects
+                        .filter(car=car)
+                        .order_by('-timestamp')
+                        .limit(100)
+                        .values('timestamp', 'odometer_new'))
+
+    return JsonResponse(dict(
+        price_changes=price_changes,
+        odometer_changes=odometer_changes,
+    ), safe=False)
+
+
 def summary(request):
     total_cars = Car.objects.count()
     total_price_changes = CarPriceChange.objects.count()
