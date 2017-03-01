@@ -105,7 +105,11 @@ class TeslaCrawler:
             else:
                 self.slack_message('Spotted new: ```%s```' % car)
                 logger.info('Adding new VIN: %s', car.vin)
-            car.save()
+            try:
+              with transaction.atomic():
+                car.save()
+            except:
+              logger.exception('Unable to save car!')
 
     def slack_message(self, message):
         if self.slack_client:
