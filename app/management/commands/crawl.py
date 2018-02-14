@@ -25,7 +25,7 @@ class Command(BaseCommand):
                         cars = crawler.check_url(url)
                         crawler.update_database(cars)
                     except CrawlerException as e:
-                        print('Error crawling:', e)
+                        print('Error crawling:', e, url)
                     print('Sleeping 1 second [%d cars in database]' % Car.objects.count())
                     time.sleep(1)
         print('Done!')

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-BASE_URL = 'https://www.tesla.com/cpo_tool/ajax?exteriors=&priceRange=0%2C250000&sort=featured%7Casc'
+BASE_URL = 'https://www.tesla.com/api?m=cpo_marketing_tool&a=search&exteriors=all&model=&battery=all&priceRange=0%2C200000&sort=featured%7Casc&titleStatus=used&zip='
 
 COUNTRY_CODES = [
     'US',
